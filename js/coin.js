@@ -2,7 +2,7 @@
  Coinjs 0.01 beta by OutCast3k{at}gmail.com
  A bitcoin framework.
 
- http://github.com/OutCast3k/coinjs or http://coinb.in/coinjs
+ http://github.com/lbryio/coinjs or http://coinb.in/coinjs
 */
 
 (function () {
