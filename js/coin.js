@@ -10,11 +10,21 @@
 	var coinjs = window.coinjs = function () { };
 
 	/* public vars */
-	coinjs.pub = 0x55;
-	coinjs.priv = 0x1c;
-	coinjs.multisig = 0x7a;
-	coinjs.hdkey = {'prv':0x0488ade4, 'pub':0x0488b21e};
-	coinjs.bech32 = {'charset':'qpzry9x8gf2tvdw0s3jn54khce6mua7l', 'version':0, 'hrp':'lbc'};
+
+	/* Mainnet
+	coinjs.pub = 0x4B;
+	coinjs.priv = 0x4E;
+	coinjs.multisig = 0x50;
+	coinjs.hdkey = {'prv':0x0488e4ad, 'pub':0x04881eb2};
+	coinjs.bech32 = {'charset':'qpzry9x8gf2tvdw0s3jn54khce6mua7l', 'version':0, 'hrp':'xcrc'};
+*/
+/* Testnet */
+	coinjs.pub = 0x89;
+	coinjs.priv = 0x8C;
+	coinjs.multisig = 0x8E;
+	coinjs.hdkey = {'prv':0x043587cf, 'pub':0x04358394};
+	coinjs.bech32 = {'charset':'qpzry9x8gf2tvdw0s3jn54khce6mua7l', 'version':0, 'hrp':'xcrctn'};
+/**/
 
 	coinjs.compressed = false;
 
