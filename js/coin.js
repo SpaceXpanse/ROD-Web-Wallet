@@ -11,20 +11,20 @@
 
 	/* public vars */
 
-	/* Mainnet
+/* Mainnet */
 	coinjs.pub = 0x4B;
 	coinjs.priv = 0x4E;
 	coinjs.multisig = 0x50;
 	coinjs.hdkey = {'prv':0x04881eb2, 'pub':0x0488e4ad};
 	coinjs.bech32 = {'charset':'qpzry9x8gf2tvdw0s3jn54khce6mua7l', 'version':0, 'hrp':'rod'};
-*/
-/* Testnet */
+/**/
+/* Testnet 
 	coinjs.pub = 0x89;
 	coinjs.priv = 0x8C;
 	coinjs.multisig = 0x8E;
 	coinjs.hdkey = {'prv':0x04358394, 'pub':0x043587cf};
 	coinjs.bech32 = {'charset':'qpzry9x8gf2tvdw0s3jn54khce6mua7l', 'version':0, 'hrp':'rodtn'};
-/**/
+*/
 
 	coinjs.compressed = false;
 
