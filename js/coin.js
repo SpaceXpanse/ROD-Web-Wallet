@@ -2,7 +2,7 @@
  Coinjs 0.01 beta by OutCast3k{at}gmail.com
  A bitcoin framework.
 
- http://github.com/lbryio/coinjs or http://coinb.in/coinjs
+ http://github.com/OutCast3k/coinjs or http://coinb.in/coinjs
 */
 
 (function () {
@@ -29,7 +29,7 @@
 	coinjs.compressed = false;
 
 	/* other vars */
-	coinjs.developer = '33tht1bKDgZVxb39MnZsWa8oxHXHvUYE4G'; //bitcoin
+	coinjs.developer = 'ZbE2YsoB5kSGUtgfXN7HMrismDnkcAbSav'; //bitcoin
 
 	/* bit(coinb.in) api vars */
 //	coinjs.hostname	= ((document.location.hostname.split(".")[(document.location.hostname.split(".")).length-1]) == 'onion') ? 'coinbin3ravkwb24f7rmxx6w3snkjw45jhs5lxbh3yfeg3vpt6janwqd.onion' : 'coinb.in';
@@ -37,7 +37,7 @@
 	coinjs.host = ('https:'==document.location.protocol?'https://':'http://')+coinjs.hostname+'/api/';
 	coinjs.uid = '1';
 	coinjs.key = '12345678901234567890123456789012';
-	coinjs.chainqueryAPI = "https://chainquery.lbry.com/api/sql"
+	coinjs.chainqueryAPI = "https://chainquery.example.com/api/sql"
 
 
 	/* start of address functions */
