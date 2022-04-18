@@ -2,9 +2,9 @@ $(document).ready(function() {
 
 	/* open wallet code */
 
-	var explorer_tx = "https://explorer.lbry.com/tx/"
-	var explorer_addr = "https://explorer.lbry.com/address/"
-	var explorer_block = "https://explorer.lbry.com/blocks/"
+	var explorer_tx = "https://explorer.example.com/tx/"
+	var explorer_addr = "https://explorer.example.com/address/"
+	var explorer_block = "https://explorer.example.com/blocks/"
 
 	var wallet_timer = false;
 
@@ -306,9 +306,9 @@ $(document).ready(function() {
 			coinjs.addressBalance($("#walletAddress").html(),function(data){
 				if(data["success"]){
 					const v = data["data"][0]["balance"];
-					$("#walletBalance").html(v+" LBC").attr('rel',v).fadeOut().fadeIn();
+					$("#walletBalance").html(v+" ROD").attr('rel',v).fadeOut().fadeIn();
 				} else {
-				$("#walletBalance").html("0.00 LBC").attr('rel',0).fadeOut().fadeIn();
+				$("#walletBalance").html("0.00 ROD").attr('rel',0).fadeOut().fadeIn();
 				}
 
 				$("#walletLoader").addClass("hidden");
