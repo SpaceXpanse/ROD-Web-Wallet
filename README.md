@@ -1,11 +1,11 @@
 coinbin
 =======
 
-A Open Source Browser Based Bitcoin Wallet. Version 1.7 beta by OutCast3k
+A Open Source Browser Based ROD coin Wallet. Version 1.8 beta based on 1.7 by OutCast3k
 
-Live version available at http://coinb.in/ or coinbin3ravkwb24f7rmxx6w3snkjw45jhs5lxbh3yfeg3vpt6janwqd.onion
+Live version available at https://wallet.rod.spacexpanse.org
 
-Github URL: https://github.com/lbryio/coinbin/
+Github URL: https://github.com/spacexpanse/rod-web-wallet/
 
 Coinb.in supports a number of key features such as: 
 
@@ -22,15 +22,15 @@ Coinb.in supports a number of key features such as:
 - Add custom data to transactions with the use of OP_RETURN.
 - Support current Dark Wallet Stealth Address structure (as of version Alpha 7) for outputs.
 - Brain wallet support.
-- Compatible with bitcoin-qt
-- An offical .onion address for tor users.
+- Compatible with spacexpanse-qt
+- An offical .onion address for tor users. #WIP
 - Offline qrcode creator and scanning tool.
 - HD (bip32) support.
-- Supports altcoins such as litecoin.
+- Supports ROD altcoin.
 - Replace by fee (RBF) Support.
 - Segwit Support.
 - Bech32 address support.
-- Fee calculator - https://coinb.in/#fees
+- Fee calculator - https://wallet.rod.spacexpanse.org/#fees
 - Transaction rebuild support for RBF and double spending.
 
-Donate to 33tht1bKDgZVxb39MnZsWa8oxHXHvUYE4G to see more development!
+Donate to zPoCF6fhmNR7Cz9mm5C5hUNHbYwPrFUs46 to see more development!
