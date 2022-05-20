@@ -2,9 +2,9 @@ $(document).ready(function() {
 
 	/* open wallet code */
 
-	var explorer_tx = "https://coinb.in/tx/"
-	var explorer_addr = "https://coinb.in/addr/"
-	var explorer_block = "https://coinb.in/block/"
+	var explorer_tx = "https://explorer.lbry.com/tx/"
+	var explorer_addr = "https://explorer.lbry.com/address/"
+	var explorer_block = "https://explorer.lbry.com/blocks/"
 
 	var wallet_timer = false;
 
@@ -202,7 +202,7 @@ $(document).ready(function() {
 
 				tx2.broadcast(function(data){
 					if($(data).find("result").text()=="1"){
-						$("#walletSendConfirmStatus").removeClass('hidden').addClass('alert-success').html('txid: <a href="https://coinb.in/tx/'+$(data).find("txid").text()+'" target="_blank">'+$(data).find("txid").text()+'</a>');
+						$("#walletSendConfirmStatus").removeClass('hidden').addClass('alert-success').html('txid: <a href="'+explorer_tx+$(data).find("txid").text()+'" target="_blank">'+$(data).find("txid").text()+'</a>');
 					} else {
 						$("#walletSendConfirmStatus").removeClass('hidden').addClass('alert-danger').html(unescape($(data).find("response").text()).replace(/\+/g,' '));
 						$("#walletSendFailTransaction").removeClass('hidden');
@@ -302,14 +302,13 @@ $(document).ready(function() {
 
 	function walletBalance(){
 		if($("#walletLoader").hasClass("hidden")){
-			var tx = coinjs.transaction();
 			$("#walletLoader").removeClass("hidden");
 			coinjs.addressBalance($("#walletAddress").html(),function(data){
-				if($(data).find("result").text()==1){
-					var v = $(data).find("balance").text()/100000000;
-					$("#walletBalance").html(v+" BTC").attr('rel',v).fadeOut().fadeIn();
+				if(data["success"]){
+					const v = data["data"][0]["balance"];
+					$("#walletBalance").html(v+" LBC").attr('rel',v).fadeOut().fadeIn();
 				} else {
-				$("#walletBalance").html("0.00 BTC").attr('rel',v).fadeOut().fadeIn();
+				$("#walletBalance").html("0.00 LBC").attr('rel',0).fadeOut().fadeIn();
 				}
 
 				$("#walletLoader").addClass("hidden");
@@ -908,34 +907,7 @@ $(document).ready(function() {
 
 		var host = $(this).attr('rel');
 
-        // api:             blockcypher     blockchair      chain.so
-        // network name     "btc"           "bitcoin"       "BTC"
-        // network name     "ltc"           "litecoin"      "LTC"
-        // network name     "doge"          "dogecoin"      "DOGE"
-
-		if(host=='chain.so_bitcoinmainnet'){
-			listUnspentChainso(redeem, "BTC");
-        } else if(host=='chain.so_litecoin'){
-			listUnspentChainso(redeem, "LTC");
-		} else if(host=='chain.so_dogecoin'){
-			listUnspentChainso(redeem, "DOGE");
-
-		} else if(host=='blockcypher_bitcoinmainnet'){
-			listUnspentBlockcypher(redeem, "btc");
-        } else if(host=='blockcypher_litecoin'){
-			listUnspentBlockcypher(redeem, "ltc");
-		} else if(host=='blockcypher_dogecoin'){
-			listUnspentBlockcypher(redeem, "doge");
-
-		} else if(host=='blockchair_bitcoinmainnet'){
-			listUnspentBlockchair(redeem, "bitcoin");
-        } else if(host=='blockchair_litecoin'){
-			listUnspentBlockchair(redeem, "litecoin");
-		} else if(host=='blockchair_dogecoin'){
-			listUnspentBlockchair(redeem, "dogecoin");
-		} else {
-			listUnspentDefault(redeem);
-		}
+		listUnspentDefault(redeem);
 
 		if($("#redeemFromStatus").hasClass("hidden")) {
 			// An ethical dilemma: Should we automatically set nLockTime?
@@ -1001,28 +973,30 @@ $(document).ready(function() {
 
 			$('#recipients .row[rel="'+redeem.addr+'"]').parent().remove();
 
-			$.each(redeem.decodedRs.pubkeys, function(i, o){
-				$.each($("#mediatorList option"), function(mi, mo){
+			if (redeem.decodedRs.pubkeys) {
+				$.each(redeem.decodedRs.pubkeys, function(i, o){
+					$.each($("#mediatorList option"), function(mi, mo){
 
-					var ms = ($(mo).val()).split(";");
+						var ms = ($(mo).val()).split(";");
 
-					var pubkey = ms[0]; // mediators pubkey
-					var fee = ms[2]*1; // fee in a percentage
-					var payto = coinjs.pubkey2address(pubkey); // pay to mediators address
+						var pubkey = ms[0]; // mediators pubkey
+						var fee = ms[2]*1; // fee in a percentage
+						var payto = coinjs.pubkey2address(pubkey); // pay to mediators address
 
-					if(o==pubkey){ // matched a mediators pubkey?
+						if(o==pubkey){ // matched a mediators pubkey?
 
-						var clone = '<span><div class="row recipients mediator mediator_'+pubkey+'" rel="'+redeem.addr+'">'+$("#recipients .addressAddTo").parent().parent().html()+'</div><br></span>';
-						$("#recipients").prepend(clone);
+							var clone = '<span><div class="row recipients mediator mediator_'+pubkey+'" rel="'+redeem.addr+'">'+$("#recipients .addressAddTo").parent().parent().html()+'</div><br></span>';
+							$("#recipients").prepend(clone);
 
-						$("#recipients .mediator_"+pubkey+" .glyphicon-plus:first").removeClass('glyphicon-plus');
-						$("#recipients .mediator_"+pubkey+" .address:first").val(payto).attr('disabled', true).attr('readonly',true).attr('title','Medation fee for '+$(mo).html());
+							$("#recipients .mediator_"+pubkey+" .glyphicon-plus:first").removeClass('glyphicon-plus');
+							$("#recipients .mediator_"+pubkey+" .address:first").val(payto).attr('disabled', true).attr('readonly',true).attr('title','Medation fee for '+$(mo).html());
 
-						var amount = ((fee*$("#totalInput").html())/100).toFixed(8);
-						$("#recipients .mediator_"+pubkey+" .amount:first").attr('disabled',(((amount*1)==0)?false:true)).val(amount).attr('title','Medation fee for '+$(mo).html());
-					}
+							var amount = ((fee*$("#totalInput").html())/100).toFixed(8);
+							$("#recipients .mediator_"+pubkey+" .amount:first").attr('disabled',(((amount*1)==0)?false:true)).val(amount).attr('title','Medation fee for '+$(mo).html());
+						}
+					});
 				});
-			});
+			}
 
 			validateOutputAmount();
 		}
@@ -1075,18 +1049,21 @@ $(document).ready(function() {
 
 		if(redeem.from == 'txid'){
 			tx.getTransaction(redeem.addr, function(data){
+				if (data["error"]) {
+					$("#redeemFromStatus").removeClass('hidden').html('<span class="glyphicon glyphicon-exclamation-sign"></span> Unexpected error, unable to retrieve unspent outputs. '+data["error"]);
+					$("#redeemFromBtn").html("Load").attr('disabled',false);
+					return;
+				}
 
 				$("#redeemFromAddress").removeClass('hidden').html('<span class="glyphicon glyphicon-info-sign"></span> Attempted to rebuild transaction id <a href="'+explorer_tx+redeem.addr+'" target="_blank">'+redeem.addr+'</a>');
 
-				$.each($(data).find("inputs").children(), function(i,o){
-					var tx = $(o).find("txid").text();
-					var n = $(o).find("output_no").text();
-					var amount = (($(o).find("value").text()*1)).toFixed(8);
+				$.each(data["data"], function(i,o){
+					var tx = o["transaction_hash"];
+					var n = o["vout"];
+					var script = (redeem.redeemscript==true) ? redeem.decodedRs : o["script_pub_key_hex"];
+					var amount = o["value"];
 
-					var scr = $(o).find("script").text();
-
-					addOutput(tx, n, scr, amount);
-
+					addOutput(tx, n, script, amount);
 				});
 
 				$("#recipients .addressRemoveTo").click();
@@ -1109,14 +1086,20 @@ $(document).ready(function() {
 		// unspent from address
 
 		tx.listUnspent(redeem.addr, function(data){
+			if (data["error"]) {
+				$("#redeemFromStatus").removeClass('hidden').html('<span class="glyphicon glyphicon-exclamation-sign"></span> Unexpected error, unable to retrieve unspent outputs. '+data["error"]);
+				$("#redeemFromBtn").html("Load").attr('disabled',false);
+				return;
+			}
+
 			if(redeem.addr) {
 				$("#redeemFromAddress").removeClass('hidden').html('<span class="glyphicon glyphicon-info-sign"></span> Retrieved unspent inputs from address <a href="'+explorer_addr+redeem.addr+'" target="_blank">'+redeem.addr+'</a>');
 
-				$.each($(data).find("unspent").children(), function(i,o){
-					var tx = $(o).find("tx_hash").text();
-					var n = $(o).find("tx_output_n").text();
-					var script = (redeem.redeemscript==true) ? redeem.decodedRs : $(o).find("script").text();
-					var amount = (($(o).find("value").text()*1)/100000000).toFixed(8);
+				$.each(data["data"], function(i,o){
+					var tx = o["transaction_hash"];
+					var n = o["vout"];
+					var script = (redeem.redeemscript==true) ? redeem.decodedRs : o["script_pub_key_hex"];
+					var amount = o["value"];
 
 					addOutput(tx, n, script, amount);
 				});
@@ -1129,107 +1112,6 @@ $(document).ready(function() {
 		});
 	}
 
-
-	/* retrieve unspent data from blockcypher */
-	function listUnspentBlockcypher(redeem,network){
-		$.ajax ({
-			type: "GET",
-			url: "https://api.blockcypher.com/v1/"+network+"/main/addrs/"+redeem.addr+"?includeScript=true&unspentOnly=true",
-			dataType: "json",
-			error: function(data) {
-				$("#redeemFromStatus").removeClass('hidden').html('<span class="glyphicon glyphicon-exclamation-sign"></span> Unexpected error, unable to retrieve unspent outputs!');
-			},
-			success: function(data) {
-				if (data.address) { // address field will always be present, txrefs is only present if there are UTXOs
-					$("#redeemFromAddress").removeClass('hidden').html('<span class="glyphicon glyphicon-info-sign"></span> Retrieved unspent inputs from address <a href="'+explorer_addr+redeem.addr+'" target="_blank">'+redeem.addr+'</a>');
-					for(var i in data.txrefs){
-						var o = data.txrefs[i];
-						var tx = ((""+o.tx_hash).match(/.{1,2}/g).reverse()).join("")+'';
-						if(tx.match(/^[a-f0-9]+$/)){
-							var n = o.tx_output_n;
-							var script = (redeem.redeemscript==true) ? redeem.decodedRs : o.script;
-							var amount = ((o.value.toString()*1)/100000000).toFixed(8);
-							addOutput(tx, n, script, amount);
-						}
-					}
-				} else {
-					$("#redeemFromStatus").removeClass('hidden').html('<span class="glyphicon glyphicon-exclamation-sign"></span> Unexpected error, unable to retrieve unspent outputs.');
-				}
-			},
-			complete: function(data, status) {
-				$("#redeemFromBtn").html("Load").attr('disabled',false);
-				totalInputAmount();
-			}
-		});
-	}
-
-	/* retrieve unspent data from blockchair */
-	function listUnspentBlockchair(redeem,network){
-		$.ajax ({
-			type: "GET",
-			url: "https://api.blockchair.com/"+network+"/dashboards/address/"+redeem.addr,
-			dataType: "json",
-			error: function(data) {
-				$("#redeemFromStatus").removeClass('hidden').html('<span class="glyphicon glyphicon-exclamation-sign"></span> Unexpected error, unable to retrieve unspent outputs!');
-			},
-			success: function(data) {
-				if((data.context && data.data) && data.context.code =='200'){
-					$("#redeemFromAddress").removeClass('hidden').html('<span class="glyphicon glyphicon-info-sign"></span> Retrieved unspent inputs from address <a href="'+explorer_addr+redeem.addr+'" target="_blank">'+redeem.addr+'</a>');
-					var all_info = data.data[redeem.addr];
-					for(var i in all_info.utxo){
-						var o = all_info.utxo[i];
-						var tx = ((""+o.transaction_hash).match(/.{1,2}/g).reverse()).join("")+'';
-						if(tx.match(/^[a-f0-9]+$/)){
-							var n = o.index;
-							var script = (redeem.redeemscript==true) ? redeem.decodedRs : all_info.address.script_hex;
-							var amount = ((o.value.toString()*1)/100000000).toFixed(8);
-							addOutput(tx, n, script, amount);
-						}
-					}
-				} else {
-					$("#redeemFromStatus").removeClass('hidden').html('<span class="glyphicon glyphicon-exclamation-sign"></span> Unexpected error, unable to retrieve unspent outputs.');
-				}
-			},
-			complete: function(data, status) {
-				$("#redeemFromBtn").html("Load").attr('disabled',false);
-				totalInputAmount();
-			}
-		});
-	}
-
-
-	/* retrieve unspent data from chainso */
-	function listUnspentChainso(redeem, network){
-		$.ajax ({
-			type: "GET",
-			url: "https://chain.so/api/v2/get_tx_unspent/"+network+"/"+redeem.addr,
-			dataType: "json",
-			error: function(data) {
-				$("#redeemFromStatus").removeClass('hidden').html('<span class="glyphicon glyphicon-exclamation-sign"></span> Unexpected error, unable to retrieve unspent outputs!');
-			},
-			success: function(data) {
-				if((data.status && data.data) && data.status=='success'){
-					$("#redeemFromAddress").removeClass('hidden').html('<span class="glyphicon glyphicon-info-sign"></span> Retrieved unspent inputs from address <a href="'+explorer_addr+redeem.addr+'" target="_blank">'+redeem.addr+'</a>');
-					for(var i in data.data.txs){
-						var o = data.data.txs[i];
-						var tx = ((""+o.txid).match(/.{1,2}/g).reverse()).join("")+'';
-						if(tx.match(/^[a-f0-9]+$/)){
-							var n = o.output_no;
-							var script = (redeem.redeemscript==true) ? redeem.decodedRs : o.script_hex;
-							var amount = o.value;
-							addOutput(tx, n, script, amount);
-						}
-					}
-				} else {
-					$("#redeemFromStatus").removeClass('hidden').html('<span class="glyphicon glyphicon-exclamation-sign"></span> Unexpected error, unable to retrieve unspent outputs.');
-				}
-			},
-			complete: function(data, status) {
-				$("#redeemFromBtn").html("Load").attr('disabled',false);
-				totalInputAmount();
-			}
-		});
-	}
 
 
 	/* math to calculate the inputs and outputs */
@@ -1303,7 +1185,7 @@ $(document).ready(function() {
 			error: function(data) {
 				$("#rawTransactionStatus").addClass('alert-danger').removeClass('alert-success').removeClass("hidden").html(" There was an error submitting your request, please try again").prepend('<span class="glyphicon glyphicon-exclamation-sign"></span>');
 			},
-                        success: function(data) {
+			success: function(data) {
 				$("#rawTransactionStatus").html(unescape($(data).find("response").text()).replace(/\+/g,' ')).removeClass('hidden');
 				if($(data).find("result").text()==1){
 					$("#rawTransactionStatus").addClass('alert-success').removeClass('alert-danger').removeClass("hidden").html(' TXID: ' + $(data).find("txid").text() + '<br> <a href="https://coinb.in/tx/' + $(data).find("txid").text() + '" target="_blank">View on Blockchain</a>');
@@ -1318,89 +1200,6 @@ $(document).ready(function() {
 		});
 	}
 
-	// broadcast transaction via chain.so (mainnet)
-	function rawSubmitChainso(thisbtn, network){ 
-		$(thisbtn).val('Please wait, loading...').attr('disabled',true);
-		$.ajax ({
-			type: "POST",
-			url: "https://chain.so/api/v2/send_tx/"+network+"/",
-			data: {"tx_hex":$("#rawTransaction").val()},
-			dataType: "json",
-			error: function(data) {
-				var obj = $.parseJSON(data.responseText);
-				var r = ' ';
-				r += (obj.data.tx_hex) ? obj.data.tx_hex : '';
-				r = (r!='') ? r : ' Failed to broadcast'; // build response 
-				$("#rawTransactionStatus").addClass('alert-danger').removeClass('alert-success').removeClass("hidden").html(r).prepend('<span class="glyphicon glyphicon-exclamation-sign"></span>');
-			},
-                        success: function(data) {
-				if(data.status && data.data.txid){
-					$("#rawTransactionStatus").addClass('alert-success').removeClass('alert-danger').removeClass("hidden").html(' TXID: ' + data.data.txid + '<br> <a href="https://chain.so/tx/'+network+'/' + data.data.txid + '" target="_blank">View on Blockchain Explorer</a>');
-				} else {
-					$("#rawTransactionStatus").addClass('alert-danger').removeClass('alert-success').removeClass("hidden").html(' Unexpected error, please try again').prepend('<span class="glyphicon glyphicon-exclamation-sign"></span>');
-				}				
-			},
-			complete: function(data, status) {
-				$("#rawTransactionStatus").fadeOut().fadeIn();
-				$(thisbtn).val('Submit').attr('disabled',false);				
-			}
-		});
-	}
-
-	// broadcast transaction via blockcypher.com (mainnet)
-	function rawSubmitblockcypher(thisbtn, network){ 
-		$(thisbtn).val('Please wait, loading...').attr('disabled',true);
-		$.ajax ({
-			type: "POST",
-			url: "https://api.blockcypher.com/v1/"+network+"/main/txs/push",
-			data: JSON.stringify({"tx":$("#rawTransaction").val()}),
-			error: function(data) {
-				var r = 'Failed to broadcast: error code=' + data.status.toString() + ' ' + data.statusText;
-				$("#rawTransactionStatus").addClass('alert-danger').removeClass('alert-success').removeClass("hidden").html(r).prepend('<span class="glyphicon glyphicon-exclamation-sign"></span>');
-			},
-                        success: function(data) {
-				if((data.tx) && data.tx.hash){
-					$("#rawTransactionStatus").addClass('alert-success').removeClass('alert-danger').removeClass("hidden")
-                    .html(' TXID: ' + data.tx.hash + '<br> <a href="https://live.blockcypher.com/'+network+'/tx/' + data.tx.hash + '" target="_blank">View on Blockchain Explorer</a>');
-				} else {
-					$("#rawTransactionStatus").addClass('alert-danger').removeClass('alert-success').removeClass("hidden").html(' Unexpected error, please try again').prepend('<span class="glyphicon glyphicon-exclamation-sign"></span>');
-				}
-			},
-			complete: function(data, status) {
-				$("#rawTransactionStatus").fadeOut().fadeIn();
-				$(thisbtn).val('Submit').attr('disabled',false);				
-			}
-		});
-	}
-
-	// broadcast transaction via blockchair
-	function rawSubmitblockchair(thisbtn, network){
-		$(thisbtn).val('Please wait, loading...').attr('disabled',true);
-                $.ajax ({
-                        type: "POST",
-                        url: "https://api.blockchair.com/"+network+"/push/transaction",
-                        data: {"data":$("#rawTransaction").val()},
-                        dataType: "json",
-                        error: function(data) {
-				var r = 'Failed to broadcast: error code=' + data.status.toString() + ' ' + data.statusText;
-				$("#rawTransactionStatus").addClass('alert-danger').removeClass('alert-success').removeClass("hidden").html(r).prepend('<span class="glyphicon glyphicon-exclamation-sign"></span>');
-			//	console.error(JSON.stringify(data, null, 4));
-                        },
-                        success: function(data) {
-			//	console.info(JSON.stringify(data, null, 4));
-				if((data.context && data.data) && data.context.code=='200'){
-					$("#rawTransactionStatus").addClass('alert-success').removeClass('alert-danger').removeClass("hidden")
-                    .html(' TXID: ' + data.data.transaction_hash + '<br> <a href="https://blockchair.com/'+network+'/transaction/' + data.data.transaction_hash + '" target="_blank">View on Blockchain Explorer</a>');
-				} else {
-					$("#rawTransactionStatus").addClass('alert-danger').removeClass('alert-success').removeClass("hidden").html(' Unexpected error, please try again').prepend('<span class="glyphicon glyphicon-exclamation-sign"></span>');
-				}
-			},
-			complete: function(data, status) {
-				$("#rawTransactionStatus").fadeOut().fadeIn();
-				$(thisbtn).val('Submit').attr('disabled',false);				
-                        }
-                });
-	}
 
 
 
@@ -1915,55 +1714,9 @@ $(document).ready(function() {
 	});
 
 	function configureBroadcast(){
-		var host = $("#coinjs_broadcast option:selected").val();
-
-        // api:             blockcypher     blockchair      chain.so
-        // network name     "btc"           "bitcoin"       "BTC"
-        // network name     "ltc"           "litecoin"      "LTC"
-        // network name     "doge"          "dogecoin"      "DOGE"
-
-		$("#rawSubmitBtn").unbind("");
-		if(host=="chain.so_bitcoinmainnet"){
-			$("#rawSubmitBtn").click(function(){
-				rawSubmitChainso(this, "BTC");
-			});
-		} else if(host=="chain.so_litecoin"){
-			$("#rawSubmitBtn").click(function(){
-				rawSubmitChainso(this, "LTC");
-			});
-		} else if(host=="chain.so_dogecoin"){
-			$("#rawSubmitBtn").click(function(){
-				rawSubmitChainso(this, "DOGE");
-			});
-		} else if(host=="blockcypher_bitcoinmainnet"){
-			$("#rawSubmitBtn").click(function(){
-				rawSubmitblockcypher(this, "btc");
-			});
-		} else if(host=="blockcypher_litecoin"){
-			$("#rawSubmitBtn").click(function(){
-				rawSubmitblockcypher(this, "ltc");
-			});
-		} else if(host=="blockcypher_dogecoin"){
-			$("#rawSubmitBtn").click(function(){
-				rawSubmitblockcypher(this, "doge");
-			});
-		} else if(host=="blockchair_bitcoinmainnet"){
-			$("#rawSubmitBtn").click(function(){
-				rawSubmitblockchair(this, "bitcoin");
-			});
-		} else if(host=="blockchair_litecoin"){
-			$("#rawSubmitBtn").click(function(){
-				rawSubmitblockchair(this, "litecoin");
-			});
-		} else if(host=="blockchair_dogecoin"){
-			$("#rawSubmitBtn").click(function(){
-				rawSubmitblockchair(this, "dogecoin");
-			});
-		} else {
-			$("#rawSubmitBtn").click(function(){
-				rawSubmitDefault(this); // revert to default
-			});
-		}
+		$("#rawSubmitBtn").click(function(){
+			rawSubmitDefault(this); // revert to default
+		});
 	}
 
 	function configureGetUnspentTx(){

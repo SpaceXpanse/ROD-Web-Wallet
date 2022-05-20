@@ -2,7 +2,7 @@
  Coinjs 0.01 beta by OutCast3k{at}gmail.com
  A bitcoin framework.
 
- http://github.com/OutCast3k/coinjs or http://coinb.in/coinjs
+ http://github.com/lbryio/coinjs or http://coinb.in/coinjs
 */
 
 (function () {
@@ -10,11 +10,11 @@
 	var coinjs = window.coinjs = function () { };
 
 	/* public vars */
-	coinjs.pub = 0x00;
-	coinjs.priv = 0x80;
-	coinjs.multisig = 0x05;
+	coinjs.pub = 0x55;
+	coinjs.priv = 0x1c;
+	coinjs.multisig = 0x7a;
 	coinjs.hdkey = {'prv':0x0488ade4, 'pub':0x0488b21e};
-	coinjs.bech32 = {'charset':'qpzry9x8gf2tvdw0s3jn54khce6mua7l', 'version':0, 'hrp':'bc'};
+	coinjs.bech32 = {'charset':'qpzry9x8gf2tvdw0s3jn54khce6mua7l', 'version':0, 'hrp':'lbc'};
 
 	coinjs.compressed = false;
 
@@ -22,10 +22,13 @@
 	coinjs.developer = '33tht1bKDgZVxb39MnZsWa8oxHXHvUYE4G'; //bitcoin
 
 	/* bit(coinb.in) api vars */
-	coinjs.hostname	= ((document.location.hostname.split(".")[(document.location.hostname.split(".")).length-1]) == 'onion') ? 'coinbin3ravkwb24f7rmxx6w3snkjw45jhs5lxbh3yfeg3vpt6janwqd.onion' : 'coinb.in';
+//	coinjs.hostname	= ((document.location.hostname.split(".")[(document.location.hostname.split(".")).length-1]) == 'onion') ? 'coinbin3ravkwb24f7rmxx6w3snkjw45jhs5lxbh3yfeg3vpt6janwqd.onion' : 'coinb.in';
+	coinjs.hostname	= 'localhost:8000';
 	coinjs.host = ('https:'==document.location.protocol?'https://':'http://')+coinjs.hostname+'/api/';
 	coinjs.uid = '1';
 	coinjs.key = '12345678901234567890123456789012';
+	coinjs.chainqueryAPI = "https://chainquery.lbry.com/api/sql"
+
 
 	/* start of address functions */
 
@@ -165,6 +168,37 @@
 		s.writeOp(117);//OP_DROP
 		s.writeBytes(Crypto.util.hexToBytes(pubkey));
 		s.writeOp(172);//OP_CHECKSIG
+
+		var x = ripemd160(Crypto.SHA256(s.buffer, {asBytes: true}), {asBytes: true});
+		x.unshift(coinjs.multisig);
+		var r = x;
+		r = Crypto.SHA256(Crypto.SHA256(r, {asBytes: true}), {asBytes: true});
+		var checksum = r.slice(0,4);
+		var redeemScript = Crypto.util.bytesToHex(s.buffer);
+		var address = coinjs.base58encode(x.concat(checksum));
+
+		return {'address':address, 'redeemScript':redeemScript};
+	}
+
+	coinjs.timelockedAddress = function(pubkey, checklocktimeverify) {
+
+		if(checklocktimeverify < 0) {
+			throw "Parameter for OP_CHECKLOCKTIMEVERIFY is negative.";
+		}
+
+		var s = coinjs.script();
+		if (checklocktimeverify <= 16 && checklocktimeverify >= 1) {
+			s.writeOp(0x50 + checklocktimeverify);//OP_1 to OP_16 for minimal encoding
+		} else {
+			s.writeBytes(coinjs.numToScriptNumBytes(checklocktimeverify));
+		}
+		s.writeOp(0xb1);//OP_CHECKLOCKTIMEVERIFY
+		s.writeOp(0x75);//OP_DROP
+		s.writeOp(0x76);//OP_DUP
+		s.writeOp(0xa9);//OP_HASH160
+		s.writeBytes(Crypto.util.hexToBytes(pubkey));
+		s.writeOp(0x88);//88 OP_EQUALVERIFY
+		s.writeOp(0xac);//OP_CHECKSIG
 
 		var x = ripemd160(Crypto.SHA256(s.buffer, {asBytes: true}), {asBytes: true});
 		x.unshift(coinjs.multisig);
@@ -321,7 +355,8 @@
 
 	/* retreive the balance from a given address */
 	coinjs.addressBalance = function(address, callback){
-		coinjs.ajax(coinjs.host+'?uid='+coinjs.uid+'&key='+coinjs.key+'&setmodule=addresses&request=bal&address='+address+'&r='+Math.random(), callback, "GET");
+		const query = 'select balance from address where address = "'+address+'";'
+		coinjs.ajax(coinjs.chainqueryAPI+'?query='+encodeURIComponent(query), (response)=>{callback(JSON.parse(response))}, "GET");
 	}
 
 	/* decompress an compressed public key */
@@ -899,6 +934,16 @@
 					var rs = Crypto.util.bytesToHex(s.buffer);
 					r.redeemscript = rs;
 					r.type = "hodl__";
+
+				}  else if(s.chunks.length == 8 && s.chunks[1] == 177 && s.chunks[2] == 117 && s.chunks[3] == 118 && s.chunks[7] == 172){
+					// ^ <unlocktime> OP_CHECKLOCKTIMEVERIFY OP_DROP OP_DUP OP_HASH160 <pubkey> OP_EQUALVERIFY OP_CHECKSIG ^
+					r = {}
+					r.pubkey = Crypto.util.bytesToHex(s.chunks[5]);
+					r.checklocktimeverify = coinjs.bytesToNum(s.chunks[0].slice());
+					r.address = coinjs.timelockedAddress(r.pubkey, r.checklocktimeverify).address;
+					var rs = Crypto.util.bytesToHex(s.buffer);
+					r.redeemscript = rs;
+					r.type = "hodl__";
 				}
 			} catch(e) {
 				// console.log(e);
@@ -1064,12 +1109,14 @@
 
 		/* list unspent transactions */
 		r.listUnspent = function(address, callback) {
-			coinjs.ajax(coinjs.host+'?uid='+coinjs.uid+'&key='+coinjs.key+'&setmodule=addresses&request=unspent&address='+address+'&r='+Math.random(), callback, "GET");
+			const query = 'select o.transaction_hash, o.vout, o.value, o.script_pub_key_hex, o.type from address a inner join transaction_address ta on a.id = ta.address_id inner join output o on o.transaction_id = ta.transaction_id and o.is_spent = 0 and o.type not in ("nonstandard","nulldata") and o.address_list = \'["'+address+'"]\' where a.address = "'+address+'";'
+			coinjs.ajax(coinjs.chainqueryAPI+'?query='+encodeURIComponent(query), (response)=>{callback(JSON.parse(response))}, "GET");
 		}
 
 		/* list transaction data */
 		r.getTransaction = function(txid, callback) {
-			coinjs.ajax(coinjs.host+'?uid='+coinjs.uid+'&key='+coinjs.key+'&setmodule=bitcoin&request=gettransaction&txid='+txid+'&r='+Math.random(), callback, "GET");
+			const query = 'select transaction_hash, vout, value, script_pub_key_hex from output where is_spent = 0 and type not in ("nonstandard","nulldata") and transaction_hash = "'+txid+'"'
+			coinjs.ajax(coinjs.chainqueryAPI+'?query='+encodeURIComponent(query), (response)=>{callback(JSON.parse(response))}, "GET");
 		}
 
 		/* add unspent to transaction */
@@ -1081,23 +1128,12 @@
 				var total = 0;
 				var x = {};
 
-				if (window.DOMParser) {
-					parser=new DOMParser();
-					xmlDoc=parser.parseFromString(data,"text/xml");
-				} else {
-					xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
-					xmlDoc.async=false;
-					xmlDoc.loadXML(data);
-				}
-
-				var unspent = xmlDoc.getElementsByTagName("unspent")[0];
-
-				if(unspent){ 
-					for(i=1;i<=unspent.childElementCount;i++){
-						var u = xmlDoc.getElementsByTagName("unspent_"+i)[0]
-						var txhash = (u.getElementsByTagName("tx_hash")[0].childNodes[0].nodeValue).match(/.{1,2}/g).reverse().join("")+'';
-						var n = u.getElementsByTagName("tx_output_n")[0].childNodes[0].nodeValue;
-						var scr = script || u.getElementsByTagName("script")[0].childNodes[0].nodeValue;
+				if(data){
+					for(i=0;i<=data["data"].length;i++){
+						var u = data["data"][i]
+						var txhash = u["transaction_hash"];
+						var n = u["vout"];
+						var scr = script || n["script_pub_key_hex"];
 
 						if(segwit){
 							/* this is a small hack to include the value with the redeemscript to make the signing procedure smoother. 
@@ -1106,22 +1142,19 @@
 							s = coinjs.script();
 							s.writeBytes(Crypto.util.hexToBytes(script));
 							s.writeOp(0);
-							s.writeBytes(coinjs.numToBytes(u.getElementsByTagName("value")[0].childNodes[0].nodeValue*1, 8));
+							s.writeBytes(coinjs.numToBytes(u["value"]));
 							scr = Crypto.util.bytesToHex(s.buffer);
 						}
 
 						var seq = sequence || false;
 						self.addinput(txhash, n, scr, seq);
-						value += u.getElementsByTagName("value")[0].childNodes[0].nodeValue*1;
+						value += u["value"];
 						total++;
 					}
 				}
 
-				x.result = xmlDoc.getElementsByTagName("result")[0].childNodes[0].nodeValue;
-				x.unspent = unspent;
 				x.value = value;
 				x.total = total;
-				x.response = xmlDoc.getElementsByTagName("response")[0].childNodes[0].nodeValue;
 
 				return callback(x);
 			});
