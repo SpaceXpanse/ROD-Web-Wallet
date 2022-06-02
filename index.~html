@@ -1353,8 +1353,8 @@
 								<b>Network</b>: <br>
 								<p class="text-muted">Select which network you'd like to use for key pair generation.</p>
 								<select class="form-control" id="coinjs_coin">
-									<option value="custom" rel="0x4b;0x4e;0x50;0x0488e4ad;0x04881eb2;false;false">Mainnet</option>
-									<option value="custom" rel="0x89;0x8c;0x8e;0x043587cf;0x04358394;false;false">Testnet</option>
+									<option value="custom" rel="0x3c;0x4b;0x4e;0x0488e4ad;0x04881eb2;false;false">Mainnet</option>
+									<option value="custom" rel="0x7a;0x89;0x8c;0x043587cf;0x04358394;false;false">Testnet</option>
 								</select>
 							</div>
 						</div>

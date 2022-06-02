@@ -13,15 +13,15 @@
 
 /* Mainnet */
 	coinjs.pub = 0x3C;
-	coinjs.priv = 0x4B;
-	coinjs.multisig = 0x4E;
+	coinjs.priv = 0x4E;
+	coinjs.multisig = 0x4B;
 	coinjs.hdkey = {'prv':0x04881eb2, 'pub':0x0488e4ad};
 	coinjs.bech32 = {'charset':'qpzry9x8gf2tvdw0s3jn54khce6mua7l', 'version':0, 'hrp':'rod'};
 /**/
 /* Testnet 
 	coinjs.pub = 0x7A;
-	coinjs.priv = 0x89;
-	coinjs.multisig = 0x8C;
+	coinjs.priv = 0x8C;
+	coinjs.multisig = 0x89;
 	coinjs.hdkey = {'prv':0x04358394, 'pub':0x043587cf};
 	coinjs.bech32 = {'charset':'qpzry9x8gf2tvdw0s3jn54khce6mua7l', 'version':0, 'hrp':'rodtn'};
 */
