@@ -154,9 +154,9 @@
 											<b>Notice</b>: Different email address and password combination will open different wallets, be careful when entering your details as lost accounts can not be recovered!
 										</div>
 
-										<input id="openEmail" type="email" class="form-control" placeholder="Email address" required autofocus>
-										<input id="openPass" type="password" class="form-control" placeholder="Password" required>
-										<input id="openPassConfirm" type="password" class="form-control" placeholder="Password confirm" required>
+										<input id="openEmail" type="email" class="form-control" placeholder="Email address" required autofocus readonly>
+										<input id="openPass" type="password" class="form-control" placeholder="Password" required readonly>
+										<input id="openPassConfirm" type="password" class="form-control" placeholder="Password confirm" required readonly>
 										<br>
 
 										<div>
@@ -1400,6 +1400,18 @@
 
 						<hr>
 
+						<div class="row">
+							<div class="col-md-12">
+								<b>Broadcast</b>: <br>
+								<p class="text-muted">Select the network you wish to broadcast the transaction via</p>
+								<select class="form-control" id="coinjs_broadcast">
+									<option value="rod_mainnet"> explorer.rod.spacexpanse.org:3001 (ROD mainnet)</option>
+									<option value="rod_testnet"> explorer1.rod.spacexpanse.org:3001 (ROD testnet)</option>
+								</select>
+							</div>
+						</div>
+							
+						<hr>
 
 						<div id="statusSettings" class="hidden alert">
 						</div>
